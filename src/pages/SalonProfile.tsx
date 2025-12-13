@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Star,
   Heart,
@@ -101,8 +102,25 @@ const reviews = [
 
 const SalonProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState<number | null>(null);
+
+  const whatsappNumber = "+27123456789";
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}?text=Hi! I'd like to book an appointment at The Gentleman's Cut.`;
+
+  const handleBookNow = () => {
+    navigate(`/book/salon/${id || "1"}`, {
+      state: { selectedServices: selectedServices.map(name => {
+        for (const category of Object.values(services)) {
+          const service = category.find((s) => s.name === name);
+          if (service) return service;
+        }
+        return null;
+      }).filter(Boolean) }
+    });
+  };
 
   const toggleService = (serviceName: string) => {
     setSelectedServices((prev) =>
@@ -200,16 +218,27 @@ const SalonProfile = () => {
           <h2 className="font-display text-2xl text-foreground mb-6">GALLERY</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {galleryImages.map((img, i) => (
-              <button
-                key={i}
-                className="aspect-square rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
-              >
-                <img
-                  src={img}
-                  alt={`Gallery ${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
+              <Dialog key={i}>
+                <DialogTrigger asChild>
+                  <button
+                    className="aspect-square rounded-xl overflow-hidden hover:opacity-90 transition-opacity ring-2 ring-transparent hover:ring-accent"
+                    onClick={() => setSelectedGalleryImage(i)}
+                  >
+                    <img
+                      src={img}
+                      alt={`Gallery ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
+                  <img
+                    src={img}
+                    alt={`Gallery ${i + 1}`}
+                    className="w-full h-auto rounded-xl"
+                  />
+                </DialogContent>
+              </Dialog>
             ))}
           </div>
         </div>
@@ -346,7 +375,7 @@ const SalonProfile = () => {
                     R{totalPrice}
                   </p>
                 </div>
-                <Button variant="gold" size="lg">
+                <Button variant="gold" size="lg" onClick={handleBookNow}>
                   Continue Booking
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -391,9 +420,11 @@ const SalonProfile = () => {
                       ({barber.reviewCount})
                     </span>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full mt-2">
-                    <User className="w-4 h-4 mr-2" />
-                    View Profile
+                  <Button variant="outline" size="sm" className="w-full mt-2" asChild>
+                    <Link to={`/barber/${barber.id}`}>
+                      <User className="w-4 h-4 mr-2" />
+                      View Profile
+                    </Link>
                   </Button>
                 </div>
               </div>
@@ -460,6 +491,23 @@ const SalonProfile = () => {
           </div>
         </div>
       </section>
+
+      {/* Floating CTAs */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-3 p-2 bg-card/90 backdrop-blur-md rounded-full shadow-lg border border-border/50">
+        <Button
+          variant="outline"
+          size="lg"
+          className="rounded-full"
+          onClick={() => window.open(whatsappUrl, "_blank")}
+        >
+          <Phone className="w-5 h-5 mr-2 text-green-500" />
+          WhatsApp
+        </Button>
+        <Button variant="gold" size="lg" className="rounded-full" onClick={handleBookNow}>
+          <Calendar className="w-5 h-5 mr-2" />
+          Book Now
+        </Button>
+      </div>
 
       <Footer />
     </div>
