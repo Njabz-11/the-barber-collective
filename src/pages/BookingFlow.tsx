@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Check,
   ChevronLeft,
@@ -15,6 +18,8 @@ import {
   Phone,
   MessageSquare,
   Calendar as CalendarIcon,
+  Loader2,
+  Mail,
 } from "lucide-react";
 
 import barber1 from "@/assets/barber-1.jpg";
@@ -23,10 +28,13 @@ import barber2 from "@/assets/barber-2.jpg";
 const steps = ["Select Services", "Choose Barber", "Pick Date & Time", "Your Details", "Confirm"];
 
 const services = [
-  { id: "1", name: "Skin Fade", price: 100, duration: "45 min" },
-  { id: "2", name: "Beard Trim", price: 50, duration: "20 min" },
-  { id: "3", name: "Line-Up", price: 40, duration: "15 min" },
-  { id: "4", name: "Hot Towel Shave", price: 100, duration: "40 min" },
+  { id: "1", name: "Skin Fade", price: 100, duration: 45 },
+  { id: "2", name: "Beard Trim", price: 50, duration: 20 },
+  { id: "3", name: "Line-Up", price: 40, duration: 15 },
+  { id: "4", name: "Hot Towel Shave", price: 100, duration: 40 },
+  { id: "5", name: "Classic Cut", price: 80, duration: 30 },
+  { id: "6", name: "Scissor Cut", price: 90, duration: 40 },
+  { id: "7", name: "Kids Cut", price: 60, duration: 25 },
 ];
 
 const barbers = [
@@ -55,16 +63,46 @@ const timeSlots = [
 const BookingFlow = () => {
   const { salonId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, profile } = useAuth();
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [customerDetails, setCustomerDetails] = useState({
     name: "",
+    email: "",
     phone: "",
     notes: "",
   });
+
+  // Pre-fill customer details if logged in
+  useEffect(() => {
+    if (profile) {
+      setCustomerDetails(prev => ({
+        ...prev,
+        name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+      }));
+    }
+  }, [profile]);
+
+  // Handle pre-selected services from salon profile
+  useEffect(() => {
+    if (location.state?.selectedServices) {
+      const preSelected = location.state.selectedServices;
+      const serviceIds = preSelected.map((s: any) => {
+        const found = services.find(srv => srv.name === s.name);
+        return found?.id;
+      }).filter(Boolean);
+      setSelectedServices(serviceIds);
+    }
+  }, [location.state]);
 
   const toggleService = (id: string) => {
     setSelectedServices((prev) =>
@@ -79,8 +117,7 @@ const BookingFlow = () => {
 
   const totalDuration = selectedServices.reduce((sum, id) => {
     const service = services.find((s) => s.id === id);
-    const mins = parseInt(service?.duration || "0");
-    return sum + mins;
+    return sum + (service?.duration || 0);
   }, 0);
 
   const canProceed = () => {
@@ -98,8 +135,85 @@ const BookingFlow = () => {
     }
   };
 
+  const calculateEndTime = (startTime: string, durationMinutes: number) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMins = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+  };
+
+  const handleSubmitBooking = async () => {
+    if (!selectedDate || !selectedTime) return;
+
+    setIsSubmitting(true);
+    try {
+      // Format date as YYYY-MM-DD
+      const bookingDate = selectedDate.toISOString().split('T')[0];
+      const endTime = calculateEndTime(selectedTime, totalDuration);
+
+      // Create booking
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .insert({
+          business_id: salonId || '00000000-0000-0000-0000-000000000001', // Demo business ID
+          customer_id: user?.id || null,
+          customer_name: customerDetails.name,
+          customer_email: customerDetails.email || null,
+          customer_phone: customerDetails.phone,
+          customer_notes: customerDetails.notes || null,
+          booking_date: bookingDate,
+          start_time: selectedTime,
+          end_time: endTime,
+          total_amount: totalPrice,
+          status: 'pending',
+          barber_id: selectedBarber === 'auto' ? null : selectedBarber || null,
+        })
+        .select()
+        .single();
+
+      if (bookingError) throw bookingError;
+
+      // Add booking services
+      const bookingServices = selectedServices.map(serviceId => {
+        const service = services.find(s => s.id === serviceId);
+        return {
+          booking_id: booking.id,
+          service_name: service?.name || '',
+          service_price: service?.price || 0,
+          service_duration: service?.duration || 0,
+        };
+      });
+
+      const { error: servicesError } = await supabase
+        .from('booking_services')
+        .insert(bookingServices);
+
+      if (servicesError) throw servicesError;
+
+      setBookingId(booking.id);
+      setCurrentStep(4);
+
+      toast({
+        title: "Booking Confirmed!",
+        description: "Your appointment has been successfully booked.",
+      });
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
+    if (currentStep === 3) {
+      handleSubmitBooking();
+    } else if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -108,6 +222,15 @@ const BookingFlow = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const generateWhatsAppUrl = () => {
+    const businessPhone = "+27123456789";
+    const selectedServiceNames = selectedServices
+      .map(id => services.find(s => s.id === id)?.name)
+      .join(", ");
+    const message = `Hi! I've just booked an appointment:\n\n📅 Date: ${selectedDate?.toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n⏰ Time: ${selectedTime}\n✂️ Services: ${selectedServiceNames}\n💰 Total: R${totalPrice}\n\nBooking ID: ${bookingId}`;
+    return `https://wa.me/${businessPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -183,7 +306,7 @@ const BookingFlow = () => {
                           {service.name}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {service.duration}
+                          {service.duration} min
                         </p>
                       </div>
                     </div>
@@ -267,7 +390,7 @@ const BookingFlow = () => {
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date()}
+                    disabled={(date) => date < new Date() || date.getDay() === 0}
                     className="rounded-xl border mx-auto pointer-events-auto"
                   />
                 </div>
@@ -304,7 +427,7 @@ const BookingFlow = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground flex items-center gap-2">
                     <User className="w-4 h-4 text-accent" />
-                    Your Name
+                    Your Name *
                   </label>
                   <Input
                     value={customerDetails.name}
@@ -320,8 +443,26 @@ const BookingFlow = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-accent" />
+                    Email (Optional)
+                  </label>
+                  <Input
+                    value={customerDetails.email}
+                    onChange={(e) =>
+                      setCustomerDetails({
+                        ...customerDetails,
+                        email: e.target.value,
+                      })
+                    }
+                    placeholder="your@email.com"
+                    type="email"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
                     <Phone className="w-4 h-4 text-accent" />
-                    Phone Number
+                    Phone Number *
                   </label>
                   <Input
                     value={customerDetails.phone}
@@ -369,6 +510,11 @@ const BookingFlow = () => {
                   <p className="text-muted-foreground">
                     Your appointment has been booked successfully
                   </p>
+                  {bookingId && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Booking ID: {bookingId.slice(0, 8)}...
+                    </p>
+                  )}
                 </div>
 
                 <div className="bg-secondary/50 rounded-xl p-6 space-y-4">
@@ -403,6 +549,12 @@ const BookingFlow = () => {
                       {totalDuration} min
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Customer</span>
+                    <span className="font-medium text-foreground">
+                      {customerDetails.name}
+                    </span>
+                  </div>
                   <hr className="border-border" />
                   <div className="flex justify-between text-lg">
                     <span className="font-semibold text-foreground">Total</span>
@@ -411,7 +563,12 @@ const BookingFlow = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Button variant="gold" size="lg" className="w-full">
+                  <Button
+                    variant="gold"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => window.open(generateWhatsAppUrl(), "_blank")}
+                  >
                     <MessageSquare className="w-5 h-5 mr-2" />
                     Send WhatsApp Confirmation
                   </Button>
@@ -454,10 +611,19 @@ const BookingFlow = () => {
               <Button
                 variant="gold"
                 onClick={handleNext}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSubmitting}
               >
-                {currentStep === 3 ? "Confirm Booking" : "Continue"}
-                <ChevronRight className="w-4 h-4 ml-2" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : currentStep === 3 ? (
+                  "Confirm Booking"
+                ) : (
+                  "Continue"
+                )}
+                {!isSubmitting && <ChevronRight className="w-4 h-4 ml-2" />}
               </Button>
             </div>
           )}
