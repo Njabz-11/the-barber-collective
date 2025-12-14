@@ -16,6 +16,11 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ListBusiness from "./pages/ListBusiness";
 import BarberProfile from "./pages/BarberProfile";
 import Services from "./pages/Services";
+import HelpCenter from "./pages/HelpCenter";
+import FAQ from "./pages/FAQ";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CancellationPolicy from "./pages/CancellationPolicy";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +45,11 @@ const App = () => (
             <Route path="/business/*" element={<BusinessDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
             <Route path="/list-business" element={<ListBusiness />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/cancellation-policy" element={<CancellationPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
