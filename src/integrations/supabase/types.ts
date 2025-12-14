@@ -161,8 +161,12 @@ export type Database = {
           customer_notes: string | null
           customer_phone: string
           deposit_amount: number | null
+          deposit_paid: boolean | null
+          deposit_paid_at: string | null
           end_time: string
+          grace_period_minutes: number | null
           id: string
+          payment_reference: string | null
           payment_status: string | null
           start_time: string
           status: string | null
@@ -182,8 +186,12 @@ export type Database = {
           customer_notes?: string | null
           customer_phone: string
           deposit_amount?: number | null
+          deposit_paid?: boolean | null
+          deposit_paid_at?: string | null
           end_time: string
+          grace_period_minutes?: number | null
           id?: string
+          payment_reference?: string | null
           payment_status?: string | null
           start_time: string
           status?: string | null
@@ -203,8 +211,12 @@ export type Database = {
           customer_notes?: string | null
           customer_phone?: string
           deposit_amount?: number | null
+          deposit_paid?: boolean | null
+          deposit_paid_at?: string | null
           end_time?: string
+          grace_period_minutes?: number | null
           id?: string
+          payment_reference?: string | null
           payment_status?: string | null
           start_time?: string
           status?: string | null
@@ -234,8 +246,11 @@ export type Database = {
           city: string | null
           cover_image_url: string | null
           created_at: string
+          deposit_percentage: number | null
           description: string | null
           email: string | null
+          forfeit_deposit_on_late: boolean | null
+          grace_period_minutes: number | null
           id: string
           is_active: boolean | null
           is_approved: boolean | null
@@ -260,8 +275,11 @@ export type Database = {
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
+          deposit_percentage?: number | null
           description?: string | null
           email?: string | null
+          forfeit_deposit_on_late?: boolean | null
+          grace_period_minutes?: number | null
           id?: string
           is_active?: boolean | null
           is_approved?: boolean | null
@@ -286,8 +304,11 @@ export type Database = {
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
+          deposit_percentage?: number | null
           description?: string | null
           email?: string | null
+          forfeit_deposit_on_late?: boolean | null
+          grace_period_minutes?: number | null
           id?: string
           is_active?: boolean | null
           is_approved?: boolean | null
@@ -435,6 +456,41 @@ export type Database = {
           },
           {
             foreignKeyName: "gallery_images_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_points: {
+        Row: {
+          business_id: string
+          completed_bookings: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          completed_bookings?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          completed_bookings?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
@@ -794,6 +850,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vouchers: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          discount_value: number
+          expires_at: string
+          id: string
+          is_percentage: boolean
+          is_redeemed: boolean
+          redeemed_at: string | null
+          redeemed_booking_id: string | null
+          user_id: string
+          voucher_type: string
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          discount_value?: number
+          expires_at: string
+          id?: string
+          is_percentage?: boolean
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          user_id: string
+          voucher_type?: string
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          discount_value?: number
+          expires_at?: string
+          id?: string
+          is_percentage?: boolean
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          user_id?: string
+          voucher_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_redeemed_booking_id_fkey"
+            columns: ["redeemed_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
