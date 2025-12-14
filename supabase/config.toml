@@ -1,1 +1,10 @@
 project_id = "tllovjuckvbvdeereboj"
+
+[functions.paypal-create-order]
+verify_jwt = false
+
+[functions.paypal-capture-order]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = false
