@@ -1,0 +1,72 @@
+Feature,Category,Fresha Requirement,Present,Status,Code Location,Priority,Est Hours,Notes
+Online booking 24/7,Booking,Required,Partial,UI exists no real availability,src/pages/BookingFlow.tsx,P1,16,Time slots are hardcoded
+Service selection,Booking,Required,Yes,Works with static data,src/pages/BookingFlow.tsx,P1,4,Need DB integration
+Barber selection,Booking,Required,Partial,Static list no availability,src/pages/BookingFlow.tsx,P1,8,Need real barber data
+Date/time picker,Booking,Required,Partial,Calendar works slots static,src/pages/BookingFlow.tsx,P1,12,Need availability engine
+Real-time availability,Booking,Required,No,Not implemented,-,P1,16,Critical gap
+Instant confirmation,Booking,Required,No,No email/SMS,-,P1,8,Need notification system
+Staff calendar view,Booking,Required,No,Placeholder component,src/components/business/BookingsCalendar.tsx,P1,20,Major implementation
+Drag/drop rescheduling,Booking,Required,No,Not implemented,-,P2,12,Calendar enhancement
+Buffer times,Booking,Required,No,DB field exists not used,-,P2,4,Quick add
+Working hours/breaks,Booking,Required,No,DB field exists not used,-,P1,8,Business settings
+Blocked time,Booking,Required,No,Not implemented,-,P2,4,Calendar feature
+Google Calendar sync,Booking,Required,No,Not implemented,-,P2,12,Integration work
+Booking modifications,Booking,Required,Partial,UI buttons exist no logic,src/pages/CustomerDashboard.tsx,P1,8,Add reschedule/cancel
+Service CRUD,Services,Required,No,Placeholder,src/components/business/ServicesEditor.tsx,P1,8,Full implementation
+Categories,Services,Required,Partial,DB exists no UI,services table,P1,4,Add UI
+Duration per service,Services,Required,Yes,In DB schema,services table,Done,0,Complete
+Staff-specific pricing,Services,Required,No,DB supports no UI,services table,P2,6,Add override UI
+Add-ons,Services,Required,No,Not implemented,-,P2,8,New feature
+Bundles/packages,Services,Required,No,Not implemented,-,P2,10,New feature
+Online payments,Payments,Required,Partial,PayPal edge functions exist,supabase/functions/paypal-*,P1,12,Integrate into flow
+Deposit collection 50%,Payments,Required,Partial,DB fields exist,bookings table,P1,8,Enforce in booking
+Card-on-file tokens,Payments,Required,No,Not implemented,-,P2,12,PayPal tokenization
+In-store terminal,Payments,Required,No,Not implemented,-,P2,16,Hardware integration
+Tips,Payments,Required,No,Not implemented,-,P3,4,Simple add
+Refunds,Payments,Required,No,Not implemented,-,P1,8,PayPal refund API
+POS sales,Payments,Required,No,Not implemented,-,P2,16,New module
+Client profiles,CRM,Required,Partial,profiles table exists,-,P1,8,Enhance UI
+Booking history,CRM,Required,No,UI mock only,src/pages/CustomerDashboard.tsx,P1,6,DB query
+Client notes,CRM,Required,Partial,DB table exists,client_notes table,P2,4,Add UI
+Allergies/patch test,CRM,Required,No,Not in schema,-,P2,4,Add field
+Fast rebooking,CRM,Required,No,Button exists no logic,-,P2,4,Add logic
+Loyalty points display,CRM,Required,Partial,DB complete no UI,loyalty_points vouchers tables,P1,8,Add dashboard
+Email confirmations,Notifications,Required,No,Not implemented,-,P1,8,Need email service
+SMS confirmations,Notifications,Required,No,Not implemented,-,P1,8,Need SMS service
+WhatsApp confirmations,Notifications,Required,Partial,URL generation only,src/pages/BookingFlow.tsx,P1,12,Need WhatsApp API
+Reminder automation,Notifications,Required,No,Not implemented,-,P1,12,Scheduled jobs
+Marketing campaigns,Notifications,Required,No,Not implemented,-,P2,16,New module
+Waitlist,Notifications,Required,No,Not implemented,-,P2,12,New feature
+Customer reviews,Reviews,Required,Partial,DB exists display only,reviews table,P1,8,Add submission
+Post-booking review prompt,Reviews,Required,No,Not implemented,-,P1,4,Email/SMS trigger
+Owner response,Reviews,Required,No,Not implemented,-,P2,4,Add UI
+Review moderation,Reviews,Required,No,Not implemented,-,P2,4,Admin panel
+Product catalog,Inventory,Required,No,DB exists no UI,products table,P2,8,New page
+Stock tracking,Inventory,Required,No,DB field exists,products.stock_quantity,P2,6,Add logic
+Low stock alerts,Inventory,Required,No,Not implemented,-,P3,4,Notification
+Product POS sale,Inventory,Required,No,Not implemented,-,P2,8,POS integration
+Revenue reports,Reports,Required,No,Placeholder,src/components/business/AnalyticsDashboard.tsx,P1,12,Charts and data
+Staff performance,Reports,Required,No,Not implemented,-,P2,8,Metrics
+No-show tracking,Reports,Required,No,Not implemented,-,P2,4,Status field
+Top services,Reports,Required,No,Not implemented,-,P2,4,Query
+CSV export,Reports,Required,No,Not implemented,-,P1,6,Export function
+Business signup,Onboarding,Required,Yes,Works,src/pages/ListBusiness.tsx,Done,0,Complete
+Admin approval,Onboarding,Required,No,Placeholder,src/components/admin/BusinessApprovals.tsx,P1,8,Full implementation
+Staff invites,Onboarding,Required,No,Not implemented,-,P2,8,Email invites
+Opening hours setup,Onboarding,Required,No,DB exists no UI,businesses.opening_hours,P1,6,Settings UI
+Photo upload,Onboarding,Required,No,Placeholder,src/components/business/GalleryManager.tsx,P1,8,Storage integration
+QR poster generation,Onboarding,Required,No,Not implemented,-,P2,6,PDF generation
+Location-based search,Discovery,Required,Partial,Static data,src/pages/SearchResults.tsx,P1,12,DB query
+Map view,Discovery,Required,No,Placeholder only,src/pages/Index.tsx,P2,16,Google Maps
+Filters functional,Discovery,Required,Partial,UI exists not functional,src/pages/SearchResults.tsx,P1,8,Wire up filters
+Real-time availability filter,Discovery,Required,No,Not implemented,-,P1,8,Complex query
+Kempton Park geo-filter,Discovery,Required,No,Not enforced,-,P1,4,Location restriction
+Business approvals,Admin,Required,No,Placeholder,src/components/admin/BusinessApprovals.tsx,P1,8,Full UI
+User management,Admin,Required,No,Placeholder,src/components/admin/UserManagement.tsx,P2,8,User list
+Dispute management,Admin,Required,No,Placeholder,src/components/admin/DisputeManagement.tsx,P3,12,Ticket system
+Platform analytics,Admin,Required,No,Placeholder,src/components/admin/PlatformAnalytics.tsx,P2,12,Dashboard
+PWA support,Technical,Required,No,Not implemented,-,P2,8,Manifest and SW
+Mobile responsive,Technical,Required,Yes,Works well,-,Done,0,Complete
+WCAG AA,Technical,Required,Partial,Basic support,-,P3,8,Accessibility audit
+SEO LocalBusiness schema,Technical,Required,No,Not implemented,-,P2,6,Schema markup
+OpenGraph meta,Technical,Required,No,Not implemented,-,P2,4,Meta tags
